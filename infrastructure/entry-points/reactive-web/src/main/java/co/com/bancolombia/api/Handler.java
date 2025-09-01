@@ -5,6 +5,7 @@ import co.com.bancolombia.api.mapper.ApplicationMapper;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -27,7 +28,7 @@ public class Handler {
                     return applicationUseCase.ApplyForLoan(applicationReq)
                             .doOnSuccess(saved -> log.info("Application saved: {}", saved.toString()));
                 })
-                .flatMap(savedApplication -> ServerResponse.ok()
+                .flatMap(savedApplication -> ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(loanApplicationDTOMapper.toResponse(savedApplication)));
     }
