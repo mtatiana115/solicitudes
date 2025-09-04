@@ -18,7 +18,7 @@ public class ApplicationUseCase {
         return iUserRestConsumer.existsUserByEmail(application.getEmail())
                 .flatMap(existsUser -> Boolean.TRUE.equals(existsUser)
                         ? internalManagement(application)
-                        : Mono.error(new IllegalArgumentException("User doesn't exists!")));
+                        : Mono.error(new IllegalArgumentException("User doesn't exist!")));
     }
     private Mono<Application> internalManagement (Application application) {
         return Mono.just(application)

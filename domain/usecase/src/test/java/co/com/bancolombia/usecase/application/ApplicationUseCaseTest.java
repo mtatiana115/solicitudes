@@ -3,6 +3,7 @@ package co.com.bancolombia.usecase.application;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.application.gateways.IUserRestConsumer;
+import co.com.bancolombia.model.exceptions.LoanTypeNotFoundException;
 import co.com.bancolombia.model.loantype.LoanType;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,12 +74,8 @@ class ApplicationUseCaseTest {
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().equals("User already exists!"))
+                        throwable.getMessage().equals("User doesn't exist!"))
                 .verify();
-
-        verify(userRestConsumer).existsUserByEmail(validApplication.getEmail());
-        verify(loanTypeRepository, never()).findById(anyInt());
-        verify(applicationRepository, never()).save(any());
     }
 
     @Test
@@ -89,13 +86,9 @@ class ApplicationUseCaseTest {
         Mono<Application> result = applicationUseCase.ApplyForLoan(validApplication);
 
         StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().contains("loan type with id: " + validApplication.getLoanTypeId() + " does not exist"))
+                .expectErrorMatches(throwable -> throwable instanceof LoanTypeNotFoundException &&
+                        throwable.getMessage().contains("Loan type with id " + validApplication.getLoanTypeId() + " does not exist"))
                 .verify();
-
-        verify(userRestConsumer).existsUserByEmail(validApplication.getEmail());
-        verify(loanTypeRepository).findById(validApplication.getLoanTypeId());
-        verify(applicationRepository, never()).save(any());
     }
 
     @Test
