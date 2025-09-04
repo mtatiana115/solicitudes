@@ -1,6 +1,7 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.model.exceptions.ExternalServiceCommunicationException;
+import co.com.bancolombia.model.exceptions.LoanTypeNotFoundException;
 import io.r2dbc.spi.R2dbcException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +22,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExternalServiceCommunicationException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleExternalService(ExternalServiceCommunicationException ex) {
-        log.error("Fallo de comunicación con servicio externo: service={}, endpoint={}, msg={}",
+        log.error("External service communication failed: service={}, endpoint={}, msg={}",
                 ex.getService(), ex.getEndpoint(), ex.getMessage(), ex);
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.SERVICE_UNAVAILABLE);
-        problem.setTitle("Servicio externo no disponible");
+        problem.setTitle("External Service Unavailable");
         problem.setDetail(ex.getMessage());
 
         return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problem));
@@ -33,7 +34,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleValidationException(ValidationException ex) {
-        log.warn("⚠DTO validation error -> {}", ex.getMessage());
+        log.warn("⚠ DTO validation error -> {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatus(400);
         problem.setTitle("Bad Request");
         problem.setDetail(ex.getMessage());
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
         log.error("Database error occurred -> {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatus(500);
         problem.setTitle("Internal Server Error");
-        problem.setDetail("A server error occurred");
+        problem.setDetail("A database error occurred");
         log.info("Returning 500 Internal Server Error for R2dbcException");
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem));
     }
@@ -95,7 +96,7 @@ public class GlobalExceptionHandler {
         log.error("Database connection failed -> {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatus(500);
         problem.setTitle("Internal Server Error");
-        problem.setDetail("A server error occurred");
+        problem.setDetail("A database connection error occurred");
         log.info("Returning 500 Internal Server Error for ConnectException");
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem));
     }
@@ -108,5 +109,16 @@ public class GlobalExceptionHandler {
         problem.setDetail("An unexpected error occurred");
         log.info("Returning 500 Internal Server Error for generic exception");
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem));
+    }
+
+    @ExceptionHandler(LoanTypeNotFoundException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleLoanTypeNotFound(LoanTypeNotFoundException ex) {
+        log.warn("Loan type not found -> {}", ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Not Found");
+        problem.setDetail(ex.getMessage());
+
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem));
     }
 }
