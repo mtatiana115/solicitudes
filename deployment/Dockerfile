@@ -1,7 +1,12 @@
-FROM eclipse-temurin:17-jdk-alpine
-VOLUME /tmp
-COPY *.jar Solicitudes.jar
-ENV JAVA_OPTS=" -Xshareclasses:name=cacheapp,cacheDir=/cache,nonfatal -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Djava.security.egd=file:/dev/./urandom"
-# Replace with a non-root user to avoid running the container with excessive privileges
-USER appuser
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS  -jar Solicitudes.jar" ]
+# Etapa de build con Gradle + JDK 18
+FROM gradle:8.4.0-jdk17 AS build
+WORKDIR /app
+COPY . .
+RUN gradle clean build -x test -x validateStructure --no-daemon
+
+# Etapa de runtime con JDK 17
+FROM amazoncorretto:17-alpine
+WORKDIR /app
+COPY --from=build /app/applications/app-service/build/libs/Solicitudes.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java","-jar","app.jar"]

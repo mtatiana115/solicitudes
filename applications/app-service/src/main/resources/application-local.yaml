@@ -32,15 +32,15 @@ springdoc:
     path: /swagger-ui.html
 adapters:
   r2dbc:
-    host: ${DB_HOST}
-    port: ${DB_PORT}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    database: ${DB_NAME}
+    host: "localhost"
+    port: 5432
+    username: "postgres"
+    password: "postgres"
+    database: "solicitudes"
 adapter:
   restconsumer:
     timeout: 300000
-    url: ${URL_AUTHENTICATION_SERVICE}
+    url: "http://localhost:8080"
 resilience4j:
   circuitbreaker:
     instances:
