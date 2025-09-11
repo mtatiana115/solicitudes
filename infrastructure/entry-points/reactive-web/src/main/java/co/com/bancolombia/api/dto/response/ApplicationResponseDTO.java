@@ -8,6 +8,7 @@ public record ApplicationResponseDTO(
         Integer term,
         String email,
         String loanTypeId,
-        String statusId
+        String statusId,
+        String documentId
 ) {
 }

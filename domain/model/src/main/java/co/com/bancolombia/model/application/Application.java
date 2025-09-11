@@ -20,5 +20,5 @@ public class Application {
     private String email;
     private Integer loanTypeId;
     private Integer statusId;
-
+    private String documentId;
 }
