@@ -1,15 +1,15 @@
-package co.com.bancolombia.r2dbc.reactiverepositoryloantype;
+package co.com.bancolombia.r2dbc.reactiverepositorystatus;
 
-import co.com.bancolombia.r2dbc.entities.ApplicationEntity;
 import co.com.bancolombia.r2dbc.entities.LoanTypeEntity;
+import co.com.bancolombia.r2dbc.entities.StatusEntity;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
-public interface LoanTypeReactiveRepository extends ReactiveCrudRepository<LoanTypeEntity, Integer>, ReactiveQueryByExampleExecutor<LoanTypeEntity> {
-
-    @Query("SELECT loan_type_id FROM loan_type WHERE name = :name")
+public interface StatusReactiveRepository extends ReactiveCrudRepository<StatusEntity, Integer>, ReactiveQueryByExampleExecutor<StatusEntity> {
+    @Query("SELECT status_id FROM status WHERE name = :name")
     Mono<Integer> findIdByName(@Param("name") String name);
+
 }

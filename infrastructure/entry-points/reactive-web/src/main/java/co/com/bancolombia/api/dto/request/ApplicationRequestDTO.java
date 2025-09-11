@@ -17,10 +17,10 @@ public record ApplicationRequestDTO(
         String email,
 
         @NotBlank(message = "Loan Type ID is required")
-        String loanTypeId,
+        Integer loanTypeId,
 
-        @NotBlank(message = "Status ID is required")
-        String statusId
+        @NotBlank(message = "Document ID is required")
+        String documentId
 ) {
 
 }

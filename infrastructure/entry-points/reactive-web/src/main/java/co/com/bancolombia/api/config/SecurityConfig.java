@@ -17,16 +17,23 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(
-                                "/v3/api-docs/",
+                                "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/",
-                                "/webjars/swagger-ui/**"
+                                "/swagger-ui/**",
+                                "/webjars/swagger-ui/**",
+                                "/v3/api-docs/swagger-config",
+                                "/v3/api-docs"
 
                         ).permitAll()
                         .pathMatchers(
                                 "/api/v1/solicitudes"
 
                         ).hasAnyRole("CLIENT")
+                        .pathMatchers(
+
+                                "/api/v1/applications"
+                        ).hasAnyRole("ADVISOR")
                         .anyExchange().authenticated()
                 )
                 .addFilterAfter(jwtFilter, SecurityWebFiltersOrder.FIRST)

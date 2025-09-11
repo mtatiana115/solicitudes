@@ -26,11 +26,14 @@ public class JwtTokenAuthenticationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-        if (path.startsWith("/v3/api-docs") ||
+        if (path.startsWith("/v3/api-docs/**") ||
                 path.startsWith("/swagger-ui") ||
+                path.startsWith("/swagger-ui/index.html") ||
                 path.startsWith("/webjars/swagger-ui") ||
                 path.equals("/v3/api-docs/swagger-config") ||
-                path.equals("/api/v1/token")
+                path.equals("/api/v1/token") ||
+                path.equals("/v3/api-docs")
+
         ) {
             return chain.filter(exchange);
         }

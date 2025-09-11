@@ -30,5 +30,6 @@ public class ApplicationEntity {
     private Integer loanTypeId;
     @Column("status_id")
     private Integer statusId;
+    private String documentId;
 
 }
