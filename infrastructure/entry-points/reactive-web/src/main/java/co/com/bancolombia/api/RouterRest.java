@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.ApplicationRequestDTO;
 import co.com.bancolombia.api.dto.response.ApplicationResponseDTO;
 import co.com.bancolombia.model.application.dto.ApplicationList;
+import co.com.bancolombia.model.application.dto.ApplicationListResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,8 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -67,29 +67,31 @@ public class RouterRest {
                     beanMethod = "listApplicationsUseCase",
                     operation = @Operation(
                             operationId = "listApplications",
-                            summary = "List loan applications with pagination and filters",
+                            summary = "List loan applications with pagination and status filter",
                             security = { @SecurityRequirement(name = "bearerAuth") },
                             parameters = {
                                     @Parameter(name = "page", description = "Page number", example = "0"),
                                     @Parameter(name = "size", description = "Page size", example = "10"),
-                                    @Parameter(name = "status", description = "Filter by application status", example = "approved"),
-                                    @Parameter(name = "documentId", description = "Filter by document ID", example = "123456789"),
-                                    @Parameter(name = "loanType", description = "Filter by loan type name", example = "mortgage")
+                                    @Parameter(name = "status", description = "Filter by application status", example = "pending review")
                             },
                             responses = {
                                     @ApiResponse(
                                             responseCode = "200",
                                             description = "Successfully retrieved list of applications",
-                                            content = @Content(schema = @Schema(implementation = ApplicationList.class))
+                                            content = @Content(schema = @Schema(implementation = ApplicationListResponse.class))
                                     ),
-                                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+                                    @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+                                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                                    @ApiResponse(responseCode = "500", description = "Internal server error")
                             }
                     )
             )
     })
 
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST("/api/v1/solicitudes"), handler::submitApplicationUseCase)
+        return route(PUT("/api/v1/solicitud"), handler::updateSolicitud)
+                .route(POST("/api/v1/solicitudes"), handler::submitApplicationUseCase)
                 .andRoute(GET("/api/v1/applications"), handler::listApplicationsUseCase);
     }
 }

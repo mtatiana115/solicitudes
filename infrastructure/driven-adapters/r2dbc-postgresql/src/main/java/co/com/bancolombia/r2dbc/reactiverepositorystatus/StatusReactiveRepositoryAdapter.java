@@ -27,4 +27,10 @@ public class StatusReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     public Mono<Integer> findIdByName(String name) {
         return repository.findIdByName(name);
     }
+
+    @Override
+    public Mono<Status> findById (Integer id){
+        return repository.findById(id)
+                .map(entity -> mapper.map(entity, Status.class));
+    }
 }
