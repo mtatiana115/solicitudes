@@ -90,8 +90,7 @@ public class RouterRest {
     })
 
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(PUT("/api/v1/solicitud"), handler::updateSolicitud)
-                .route(POST("/api/v1/solicitudes"), handler::submitApplicationUseCase)
+        return route(POST("/api/v1/solicitudes"), handler::submitApplicationUseCase)
                 .andRoute(GET("/api/v1/applications"), handler::listApplicationsUseCase);
     }
 }
