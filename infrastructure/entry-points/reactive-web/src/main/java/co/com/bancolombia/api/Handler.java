@@ -1,13 +1,10 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.request.ApplicationRequestDTO;
-import co.com.bancolombia.api.dto.request.UpdateStatusRequest;
-import co.com.bancolombia.api.dto.response.UpdateStatusResponse;
 import co.com.bancolombia.api.mapper.ApplicationMapper;
 import co.com.bancolombia.model.application.dto.ApplicationList;
 import co.com.bancolombia.usecase.application.ApplicationListUseCase;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
-import co.com.bancolombia.usecase.application.UpdateApplicationStatusUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +25,6 @@ import java.util.Optional;
 public class Handler {
     private final ApplicationUseCase applicationUseCase;
     private final ApplicationMapper loanApplicationDTOMapper;
-    private final UpdateApplicationStatusUseCase updateApplicationStatusUseCase;
     private final ApplicationListUseCase applicationListUseCase;
 
     public Mono<ServerResponse> submitApplicationUseCase(ServerRequest serverRequest) {
@@ -68,18 +64,5 @@ public class Handler {
                                     .bodyValue(applications))
                             .doOnError(error -> log.error("Error al listar solicitudes: {}", error.getMessage(), error));
                 });
-    }
-
-    public Mono<ServerResponse> updateStatus(ServerRequest request) {
-        String id = request.pathVariable("id");
-        return request.bodyToMono(UpdateStatusRequest.class)
-                .doOnSubscribe(s -> log.info("Iniciando actualización de estado para solicitud {}", id))
-                .flatMap(req -> updateApplicationStatusUseCase.execute(id, req.getStatus())
-                        .map(app -> new UpdateStatusResponse(app.getId(), req.getStatus(), "Estado actualizado exitosamente"))
-                        .doOnSuccess(response -> log.info("Actualización exitosa para solicitud {}", id))
-                        .doOnError(e -> log.error("Error en actualización para {}: {}", id, e.getMessage(), e)))
-                .flatMap(response -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
     }
 }
