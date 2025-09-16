@@ -2,13 +2,7 @@ package co.com.bancolombia.model.constants;
 
 public class DomainConstants {
 
-    private DomainConstants() {}
-
-    public static final String APPLICATION_CANNOT_BE_NULL = "Application cannot be null";
-    public static final String EMAIL_CANNOT_BE_NULL_OR_EMPTY = "Email cannot be null or empty";
-    public static final String AMOUNT_MUST_BE_GREATER_THAN_ZERO = "Amount must be greater than zero";
-    public static final String LOAN_TYPE_ID_CANNOT_BE_NULL = "Loan type ID cannot be null";
-    public static final String USER_DOESNT_EXIST = "User doesn't exist!";
+    private  DomainConstants () {}
 
     public static final String UNKNOWN_STATUS = "Unknown";
     public static final String PENDING_REVIEW_LABEL = "Pending review";
