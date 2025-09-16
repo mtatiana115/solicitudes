@@ -2,16 +2,16 @@ package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.request.ApplicationRequestDTO;
 import co.com.bancolombia.api.mapper.ApplicationMapper;
-import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.application.dto.ApplicationList;
+import co.com.bancolombia.usecase.application.ApplicationListUseCase;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -25,6 +25,7 @@ import java.util.Optional;
 public class Handler {
     private final ApplicationUseCase applicationUseCase;
     private final ApplicationMapper loanApplicationDTOMapper;
+    private final ApplicationListUseCase applicationListUseCase;
 
     public Mono<ServerResponse> submitApplicationUseCase(ServerRequest serverRequest) {
 
@@ -40,22 +41,28 @@ public class Handler {
                         .bodyValue(loanApplicationDTOMapper.toResponse(savedApplication)));
     }
 
-//    @PreAuthorize("hasRole('')
     public Mono<ServerResponse> listApplicationsUseCase(ServerRequest serverRequest) {
         int page = serverRequest.queryParam("page").map(Integer::parseInt).orElse(0);
         int size = serverRequest.queryParam("size").map(Integer::parseInt).orElse(10);
         Optional<String> status = serverRequest.queryParam("status");
-        Optional<String> documentId = serverRequest.queryParam("documentId");
-        Optional<String> loanType = serverRequest.queryParam("loanType");
 
-        ApplicationFilter filter = ApplicationFilter.builder()
-                .status(status.orElse(null))
-                .documentId(documentId.orElse(null))
-                .loanType(loanType.orElse(null))
-                .build();
-
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(applicationUseCase.listApplications(page, size, filter),ApplicationList.class);
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> {
+                    Authentication authentication = context.getAuthentication();
+                    log.info("Usuario autenticado: {}, con rol: {}",
+                            authentication.getName(),
+                            authentication.getAuthorities());
+                    // Extraer el token del encabezado de la solicitud
+                    return serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
+                })
+                .flatMap(token -> {
+                    log.info("Listando solicitudes con estado: {}, página: {}, tamaño: {}", status.orElse(null), page, size);
+                    // Pasar el token al use case
+                    return applicationListUseCase.listApplications(page, size, status.orElse(null), token)
+                            .flatMap(applications -> ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(applications))
+                            .doOnError(error -> log.error("Error al listar solicitudes: {}", error.getMessage(), error));
+                });
     }
 }

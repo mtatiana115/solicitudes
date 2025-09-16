@@ -8,10 +8,13 @@ import co.com.bancolombia.model.exceptions.ExternalServiceCommunicationException
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Service
@@ -52,19 +55,19 @@ public class RestConsumer implements IUserRestConsumer {
 
     @Override
     @CircuitBreaker(name = "findUserByEmail", fallbackMethod = "findUserFallback")
-    public Mono<User> findUserByEmail(String email) {
+    public Mono<User> findUserByEmail(String email, String token) {
         return client
                 .get()
                 .uri(PATH_FIND_USER_BY_EMAIL, email)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, resp ->
                         resp.bodyToMono(String.class).defaultIfEmpty("")
                                 .flatMap(body -> {
                                     if (resp.statusCode().value() == 404) {
                                         log.info("Usuario no encontrado para email: {}", email);
-                                        return Mono.empty(); // Esto hará que se use defaultIfEmpty
+                                        return Mono.empty();
                                     }
-                                    // Para otros errores 4xx, sí lanza excepción
                                     return Mono.error(new ExternalServiceCommunicationException(
                                             SERVICE_NAME, PATH_FIND_USER_BY_EMAIL,
                                             "Error 4xx al buscar usuario por email: " + email +
@@ -95,9 +98,9 @@ public class RestConsumer implements IUserRestConsumer {
         ));
     }
 
-    private Mono<User> findUserFallback(String email, Throwable cause) {
+    private Mono<User> findUserFallback(String email, String token, Throwable cause) {
         log.error("Fallback activado para buscar usuario con email {}. Causa: {}", email, cause.toString());
-        return Mono.empty();
+        return Mono.just(new User("NO_DISPONIBLE", email, "NO_DISPONIBLE", "NO_DISPONIBLE", new BigDecimal(0.0)));
     }
 
     private User toUserDomain(UserDTO dto) {

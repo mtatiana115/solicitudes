@@ -32,7 +32,8 @@ public class SecurityConfig {
                         ).hasAnyRole("CLIENT")
                         .pathMatchers(
 
-                                "/api/v1/applications"
+                                "/api/v1/applications",
+                                "/api/v1/applications/**"
                         ).hasAnyRole("ADVISOR")
                         .anyExchange().authenticated()
                 )

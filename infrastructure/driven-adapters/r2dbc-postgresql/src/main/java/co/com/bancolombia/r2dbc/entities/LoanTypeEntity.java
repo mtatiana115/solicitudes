@@ -29,7 +29,7 @@ public class LoanTypeEntity {
     @Column("max_amount")
     private BigDecimal maxAmount;
     @Column("interest_rate")
-    private Double interestRate;
+    private BigDecimal interestRate;
     @Column("automatic_validation")
     private Boolean automaticValidation;
 }

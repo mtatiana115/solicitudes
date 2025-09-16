@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 public interface IUserRestConsumer {
     Mono<Boolean> existsUserByEmail(String email);
 
-    Mono<User> findUserByEmail(String email);
+    Mono<User> findUserByEmail(String email, String token);
 }

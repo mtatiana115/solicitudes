@@ -138,4 +138,65 @@ class ApplicationUseCaseTest {
         verify(loanTypeRepository).findById(validApplication.getLoanTypeId());
         verify(applicationRepository).save(any());
     }
+
+    @Test
+    void applyForLoan_WhenApplicationIsNull_ShouldThrowIllegalArgumentException() {
+        Mono<Application> result = applicationUseCase.ApplyForLoan(null);
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
+                        throwable.getMessage().equals("Application cannot be null"))
+                .verify();
+    }
+
+    @Test
+    void applyForLoan_WhenApplicationHasNullEmail_ShouldThrowIllegalArgumentException() {
+        Application invalidApp = Application.builder()
+                .amount(BigDecimal.valueOf(10000))
+                .loanTypeId(1)
+                .email(null)
+                .build();
+
+        Mono<Application> result = applicationUseCase.ApplyForLoan(invalidApp);
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
+                        throwable.getMessage().equals("Email cannot be null or empty"))
+                .verify();
+    }
+
+    @Test
+    void applyForLoan_WhenApplicationHasZeroAmount_ShouldThrowIllegalArgumentException() {
+        Application invalidApp = Application.builder()
+                .amount(BigDecimal.ZERO)
+                .loanTypeId(1)
+                .email("test@test.com")
+                .build();
+
+        Mono<Application> result = applicationUseCase.ApplyForLoan(invalidApp);
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
+                        throwable.getMessage().equals("Amount must be greater than zero"))
+                .verify();
+
+        verify(userRestConsumer, never()).existsUserByEmail(any());
+    }
+
+    @Test
+    void applyForLoan_WhenInternalManagementCompletes_ShouldSaveApplication() {
+        when(userRestConsumer.existsUserByEmail(validApplication.getEmail())).thenReturn(Mono.just(true));
+        when(loanTypeRepository.findById(validApplication.getLoanTypeId())).thenReturn(Mono.just(new LoanType()));
+        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(validApplication));
+
+        Mono<Application> result = applicationUseCase.ApplyForLoan(validApplication);
+
+        StepVerifier.create(result)
+                .expectNext(validApplication)
+                .verifyComplete();
+
+        verify(userRestConsumer).existsUserByEmail(validApplication.getEmail());
+        verify(loanTypeRepository).findById(validApplication.getLoanTypeId());
+        verify(applicationRepository).save(validApplication);
+    }
 }
