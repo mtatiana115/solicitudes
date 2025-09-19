@@ -27,25 +27,24 @@ cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 springdoc:
   api-docs:
-    path: "/v3/api-docs"
+    path: /v3/api-docs
   swagger-ui:
-    path: "/swagger-ui.html"
+    path: /swagger-ui.html
 adapters:
   r2dbc:
-    host: "${DB_HOST}"
-    port: "${DB_PORT}"
-    username: "${DB_USER}"
-    password: "${DB_PASSWORD}"
-    database: "${DB_NAME}"
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    database: ${DB_NAME}
 adapter:
   restconsumer:
     timeout: 300000
-    url: "${URL_AUTHENTICATION_SERVICE}"
+    url: ${URL_AUTHENTICATION_SERVICE}
   sqs:
-    region: "us-east-2"
-    queueUrl: "https://sqs.us-east-2.amazonaws.com/845955035005/loan-notification-email-queue"
-  #  endpoint: "http://localhost:4566 # For localstack only"
-
+    region: ${AWS_REGION}
+    queueUrl: ${SQS_QUEUE_URL}
+#    endpoint: "http://localhost:4566" # For localstack only
 resilience4j:
   circuitbreaker:
     instances:
@@ -67,3 +66,10 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 10
         waitDurationInOpenState: "10s"
+security:
+  jwt:
+    secret: ${SECRET_KEY}
+    expiration: 3600
+#logging:
+#  level:
+#    root: debug

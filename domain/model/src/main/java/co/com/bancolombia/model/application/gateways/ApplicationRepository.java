@@ -1,8 +1,6 @@
 package co.com.bancolombia.model.application.gateways;
 
-import co.com.bancolombia.model.application.dto.ApplicationList;
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.application.dto.ApplicationListResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -15,4 +13,6 @@ public interface ApplicationRepository {
     Flux<Application> filterApplications(int offset, int limit, Integer loanTypeId, Integer statusId);
 
     Mono<Long> countFilteredApplications(Integer loanTypeId, Integer statusId);
+
+    Mono<Application> findByEmailAndId(String email, String id);
 }

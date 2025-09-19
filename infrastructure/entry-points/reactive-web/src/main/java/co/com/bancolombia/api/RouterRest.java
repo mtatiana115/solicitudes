@@ -2,8 +2,7 @@ package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.request.ApplicationRequestDTO;
 import co.com.bancolombia.api.dto.response.ApplicationResponseDTO;
-import co.com.bancolombia.model.application.dto.ApplicationList;
-import co.com.bancolombia.model.application.dto.ApplicationListResponse;
+import co.com.bancolombia.model.application.auxmodels.ApplicationListResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -34,6 +32,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class RouterRest {
     @Bean
     @RouterOperations({
+            // Crear solicitud
             @RouterOperation(
                     path = "/api/v1/solicitudes",
                     method = RequestMethod.POST,
@@ -42,8 +41,8 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "createApplication",
                             summary = "Submit a new loan application",
-                            security = { @SecurityRequirement(name = "bearerAuth") },
                             description = "Submits a new loan application and returns the application details",
+                            security = { @SecurityRequirement(name = "bearerAuth") },
                             requestBody = @RequestBody(
                                     required = true,
                                     content = @Content(schema = @Schema(implementation = ApplicationRequestDTO.class))
@@ -60,6 +59,7 @@ public class RouterRest {
                             }
                     )
             ),
+            // Listar solicitudes
             @RouterOperation(
                     path = "/api/v1/applications",
                     method = RequestMethod.GET,
@@ -86,12 +86,43 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "500", description = "Internal server error")
                             }
                     )
+            ),
+            // Actualizar estado de solicitud
+            @RouterOperation(
+                    path = "/api/v1/solicitud/{id}",
+                    method = RequestMethod.PUT,
+                    beanClass = Handler.class,
+                    beanMethod = "updateApplicationStatus",
+                    operation = @Operation(
+                            operationId = "updateApplicationStatus",
+                            summary = "Update the status of an application",
+                            description = "Updates the loan application status by its ID",
+                            security = { @SecurityRequirement(name = "bearerAuth") },
+                            parameters = {
+                                    @Parameter(name = "id", description = "Application ID", required = true)
+                            },
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(schema = @Schema(implementation = ApplicationRequestDTO.class))
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Application status updated successfully",
+                                            content = @Content(schema = @Schema(implementation = ApplicationResponseDTO.class))
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                                    @ApiResponse(responseCode = "404", description = "Application not found")
+                            }
+                    )
             )
     })
-
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST("/api/v1/solicitudes"), handler::submitApplicationUseCase)
-                .andRoute(GET("/api/v1/applications"), handler::listApplicationsUseCase);
+        return route()
+                .POST("/api/v1/solicitudes", handler::submitApplicationUseCase)
+                .GET("/api/v1/applications", handler::listApplicationsUseCase)
+                .PUT("/api/v1/solicitud/{id}", handler::updateApplicationStatusUseCase)
+                .build();
     }
 }
 

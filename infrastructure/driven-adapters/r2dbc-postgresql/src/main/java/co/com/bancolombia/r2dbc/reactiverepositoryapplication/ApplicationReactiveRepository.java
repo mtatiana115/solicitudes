@@ -1,8 +1,6 @@
 package co.com.bancolombia.r2dbc.reactiverepositoryapplication;
 
-import co.com.bancolombia.model.application.dto.ApplicationList;
 import co.com.bancolombia.r2dbc.entities.ApplicationEntity;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
@@ -38,4 +36,7 @@ public interface ApplicationReactiveRepository extends ReactiveCrudRepository<Ap
             @Param("loanTypeId") Integer loanTypeId,
             @Param("statusId") Integer statusId
     );
+
+    Mono<ApplicationEntity> findByEmailAndId(String email, String id);
 }
+

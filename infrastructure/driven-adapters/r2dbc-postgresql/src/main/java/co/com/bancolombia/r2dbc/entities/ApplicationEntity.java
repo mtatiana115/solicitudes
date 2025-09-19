@@ -11,6 +11,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Table("application")
 @AllArgsConstructor
@@ -22,7 +23,7 @@ import java.math.BigDecimal;
 public class ApplicationEntity {
     @Id
     @Column("application_id")
-    private String id;
+    private UUID id;
     private BigDecimal amount;
     private Integer term;
     private String email;

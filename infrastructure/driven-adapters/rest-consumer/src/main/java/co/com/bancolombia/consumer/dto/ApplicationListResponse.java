@@ -1,6 +1,6 @@
 package co.com.bancolombia.consumer.dto;
 
-import co.com.bancolombia.model.application.dto.ApplicationList;
+import co.com.bancolombia.model.application.auxmodels.ApplicationList;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
