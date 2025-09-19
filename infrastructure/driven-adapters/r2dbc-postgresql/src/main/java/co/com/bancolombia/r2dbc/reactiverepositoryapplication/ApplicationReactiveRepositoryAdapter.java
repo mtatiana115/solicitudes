@@ -1,6 +1,5 @@
 package co.com.bancolombia.r2dbc.reactiverepositoryapplication;
 
-import co.com.bancolombia.model.application.dto.ApplicationList;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.r2dbc.entities.ApplicationEntity;
@@ -48,5 +47,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
         return repository
                 .countFilteredApplications(loanTypeId, statusId)
                 .doOnSuccess(count -> log.info("Found {} applications with these filters.", count));
+    }
+
+    @Override
+    public Mono<Application> findByEmailAndId(String email, String id) {
+        return repository.findByEmailAndId(email, id)
+                .map(this::toEntity);
     }
 }

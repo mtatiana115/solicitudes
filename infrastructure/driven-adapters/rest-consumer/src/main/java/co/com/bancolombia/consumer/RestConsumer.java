@@ -8,7 +8,6 @@ import co.com.bancolombia.model.exceptions.ExternalServiceCommunicationException
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -53,40 +52,28 @@ public class RestConsumer implements IUserRestConsumer {
                 .map(ExistsUserResponse::getExistsUser);
     }
 
+
     @Override
     @CircuitBreaker(name = "findUserByEmail", fallbackMethod = "findUserFallback")
-    public Mono<User> findUserByEmail(String email, String token) {
-        return client
-                .get()
+    public Mono<User> findUserByEmail(String email) {
+        log.info("➡️ Buscando usuario en user-service por email={}", email);
+        return client.get()
                 .uri(PATH_FIND_USER_BY_EMAIL, email)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, resp ->
-                        resp.bodyToMono(String.class).defaultIfEmpty("")
-                                .flatMap(body -> {
-                                    if (resp.statusCode().value() == 404) {
-                                        log.info("Usuario no encontrado para email: {}", email);
-                                        return Mono.empty();
-                                    }
-                                    return Mono.error(new ExternalServiceCommunicationException(
-                                            SERVICE_NAME, PATH_FIND_USER_BY_EMAIL,
-                                            "Error 4xx al buscar usuario por email: " + email +
-                                                    " (status=" + resp.statusCode().value() + ", body=" + body + ")",
-                                            null));
-                                })
-                )
-                .onStatus(HttpStatusCode::is5xxServerError, resp ->
-                        resp.bodyToMono(String.class).defaultIfEmpty("")
-                                .flatMap(body -> Mono.error(new ExternalServiceCommunicationException(
+                .retrieve() // The WebClient filter automatically handles the token here
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.createException()
+                                .flatMap(ex -> Mono.error(new ExternalServiceCommunicationException(
                                         SERVICE_NAME, PATH_FIND_USER_BY_EMAIL,
-                                        "Error 5xx comunicando con " + SERVICE_NAME +
-                                                " al buscar email: " + email +
-                                                " (status=" + resp.statusCode().value() + ", body=" + body + ")",
-                                        null)))
-                )
+                                        "Error al buscar usuario por email=" + email + " (status=" + response.statusCode().value() + ")", ex))))
                 .bodyToMono(UserDTO.class)
-                .map(this::toUserDomain);
+                .doOnNext(dto -> log.info("✅ Usuario encontrado en user-service: {}", dto.getEmail()))
+                .map(this::toUserDomain)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.warn("⚠️ Usuario no encontrado en user-service para email={}", email);
+                    return Mono.empty();
+                }));
     }
+
 
     private Mono<Boolean> validateUserFallback(String email, Throwable cause) {
         log.error("Fallback activado para validar email {}. Causa: {}", email, cause.toString());
@@ -98,7 +85,7 @@ public class RestConsumer implements IUserRestConsumer {
         ));
     }
 
-    private Mono<User> findUserFallback(String email, String token, Throwable cause) {
+    private Mono<User> findUserFallback(String email, Throwable cause) {
         log.error("Fallback activado para buscar usuario con email {}. Causa: {}", email, cause.toString());
         return Mono.just(new User("NO_DISPONIBLE", email, "NO_DISPONIBLE", "NO_DISPONIBLE", new BigDecimal(0.0)));
     }

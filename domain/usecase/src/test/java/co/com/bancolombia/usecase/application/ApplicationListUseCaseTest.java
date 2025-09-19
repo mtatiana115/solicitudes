@@ -1,8 +1,8 @@
 package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.application.dto.ApplicationList;
-import co.com.bancolombia.model.application.dto.ApplicationListResponse;
+import co.com.bancolombia.model.application.auxmodels.ApplicationList;
+import co.com.bancolombia.model.application.auxmodels.ApplicationListResponse;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.auth.User;
 import co.com.bancolombia.model.application.gateways.IUserRestConsumer;
@@ -23,7 +23,6 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -75,9 +74,9 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.countFilteredApplications(null, 1)).thenReturn(Mono.just(1L));
         when(applicationRepository.filterApplications(0, 10, null, 1)).thenReturn(Flux.just(validApplication));
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(validLoanType));
-        when(userRestConsumer.findUserByEmail("user@example.com", "token")).thenReturn(Mono.just(user));
+        when(userRestConsumer.findUserByEmail("user@example.com")).thenReturn(Mono.just(user));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review");
 
         StepVerifier.create(result)
                 .expectNextCount(1)
@@ -86,7 +85,7 @@ class ApplicationListUseCaseTest {
         verify(applicationRepository).countFilteredApplications(null, 1);
         verify(applicationRepository).filterApplications(0, 10, null, 1);
         verify(loanTypeRepository).findById(1);
-        verify(userRestConsumer).findUserByEmail("user@example.com", "token");
+        verify(userRestConsumer).findUserByEmail("user@example.com");
     }
 
     @Test
@@ -95,10 +94,10 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.countFilteredApplications(null, 1)).thenReturn(Mono.just(1L));
         when(applicationRepository.filterApplications(0, 10, null, 1)).thenReturn(Flux.just(validApplication));
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(validLoanType));
-        when(userRestConsumer.findUserByEmail("user@example.com", "token"))
+        when(userRestConsumer.findUserByEmail("user@example.com"))
                 .thenReturn(Mono.error(new RuntimeException("User service down")));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review");
 
         StepVerifier.create(result)
                 .expectNextMatches(response -> {
@@ -113,7 +112,7 @@ class ApplicationListUseCaseTest {
         verify(applicationRepository).countFilteredApplications(null, 1);
         verify(applicationRepository).filterApplications(0, 10, null, 1);
         verify(loanTypeRepository).findById(1);
-        verify(userRestConsumer).findUserByEmail("user@example.com", "token");
+        verify(userRestConsumer).findUserByEmail("user@example.com");
     }
 
     @Test
@@ -123,9 +122,9 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.countFilteredApplications(null, 1)).thenReturn(Mono.just(1L));
         when(applicationRepository.filterApplications(0, 1, null, 1)).thenReturn(Flux.just(validApplication));
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(validLoanType));
-        when(userRestConsumer.findUserByEmail("user@example.com", "token")).thenReturn(Mono.just(user));
+        when(userRestConsumer.findUserByEmail("user@example.com")).thenReturn(Mono.just(user));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(-1, -5, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(-1, -5, "pending review");
 
         StepVerifier.create(result)
                 .expectNextMatches(response -> response.getCurrentPage() == -1 &&
@@ -136,7 +135,7 @@ class ApplicationListUseCaseTest {
         verify(applicationRepository).countFilteredApplications(null, 1);
         verify(applicationRepository).filterApplications(0, 1, null, 1);
         verify(loanTypeRepository).findById(1);
-        verify(userRestConsumer).findUserByEmail("user@example.com", "token");
+        verify(userRestConsumer).findUserByEmail("user@example.com");
     }
 
     @Test
@@ -146,7 +145,7 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.filterApplications(0, 10, null, 1)).thenReturn(Flux.just(validApplication));
         when(loanTypeRepository.findById(1)).thenReturn(Mono.error(new RuntimeException("DB is down")));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review");
 
         StepVerifier.create(result)
                 .expectError(RuntimeException.class)
@@ -164,7 +163,7 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.filterApplications(0, 10, null, 1))
                 .thenReturn(Flux.just(validApplication));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review");
 
         StepVerifier.create(result)
                 .expectError(RuntimeException.class)
@@ -173,7 +172,7 @@ class ApplicationListUseCaseTest {
         verify(applicationRepository).countFilteredApplications(null, 1);
         verify(applicationRepository).filterApplications(0, 10, null, 1);
         verify(loanTypeRepository, never()).findById(anyInt());
-        verify(userRestConsumer, never()).findUserByEmail(anyString(), anyString());
+        verify(userRestConsumer, never()).findUserByEmail(anyString());
     }
 
     @Test
@@ -182,7 +181,7 @@ class ApplicationListUseCaseTest {
         when(applicationRepository.filterApplications(0, 10, null, 1))
                 .thenReturn(Flux.error(new RuntimeException("DB is down")));
 
-        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review", "token");
+        Mono<ApplicationListResponse> result = applicationListUseCase.listApplications(0, 10, "pending review");
 
         StepVerifier.create(result)
                 .expectError(RuntimeException.class)
@@ -191,6 +190,6 @@ class ApplicationListUseCaseTest {
         verify(applicationRepository).countFilteredApplications(null, 1);
         verify(applicationRepository).filterApplications(0, 10, null, 1);
         verify(loanTypeRepository, never()).findById(anyInt());
-        verify(userRestConsumer, never()).findUserByEmail(anyString(), anyString());
+        verify(userRestConsumer, never()).findUserByEmail(anyString());
     }
 }

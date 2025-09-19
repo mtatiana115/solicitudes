@@ -2,8 +2,8 @@ package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
-import co.com.bancolombia.model.application.dto.ApplicationList;
-import co.com.bancolombia.model.application.dto.ApplicationListResponse;
+import co.com.bancolombia.model.application.auxmodels.ApplicationList;
+import co.com.bancolombia.model.application.auxmodels.ApplicationListResponse;
 import co.com.bancolombia.model.application.gateways.IUserRestConsumer;
 import co.com.bancolombia.model.auth.User;
 import co.com.bancolombia.model.loantype.LoanType;
@@ -24,7 +24,7 @@ public class ApplicationListUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final IUserRestConsumer userRestConsumer;
 
-    public Mono<ApplicationListResponse> listApplications(int page, int size, String statusName, String token) {
+    public Mono<ApplicationListResponse> listApplications(int page, int size, String statusName) {
         int p = Math.max(page, 0);
         int s = Math.max(size, 1);
         int offset = p * s;
@@ -45,7 +45,7 @@ public class ApplicationListUseCase {
                             .flatMap(app ->
                                     Mono.zip(
                                             loanTypeRepository.findById(app.getLoanTypeId()),
-                                            userRestConsumer.findUserByEmail(app.getEmail(), token)
+                                            userRestConsumer.findUserByEmail(app.getEmail())
                                                     .onErrorResume(e -> {
                                                         // Maneja el error del servicio externo devolviendo un objeto User predeterminado
                                                         return Mono.just(new User("N/A", app.getEmail(), "N/A", "Unknown User", BigDecimal.ZERO));
