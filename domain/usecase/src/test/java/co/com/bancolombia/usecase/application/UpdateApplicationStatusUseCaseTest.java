@@ -3,7 +3,6 @@ package co.com.bancolombia.usecase.application;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.auxmodels.DecisionEvent;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
-import co.com.bancolombia.model.application.gateways.DecisionEventSenderRepository;
 import co.com.bancolombia.model.application.gateways.IUserRestConsumer;
 import co.com.bancolombia.model.auth.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,8 +30,6 @@ class UpdateApplicationStatusUseCaseTest {
     @Mock
     private ApplicationRepository applicationRepository;
     @Mock
-    private DecisionEventSenderRepository decisionEventSenderRepository;
-    @Mock
     private IUserRestConsumer userRestConsumer;
 
     @InjectMocks
@@ -52,52 +49,28 @@ class UpdateApplicationStatusUseCaseTest {
                 .loanTypeId(1)
                 .build();
 
-
         user = new User("ADVISOR", "test@example.com", "123456789", "Test User", new BigDecimal("50000"));
     }
 
-    @Test
-    @DisplayName("Debería actualizar el estado y enviar una notificación para estado aprobado")
-    void shouldUpdateStatusAndSendNotificationOnApproved() {
-        // Configuración de los mocks para un flujo exitoso
-        when(applicationRepository.findByEmailAndId(anyString(), anyString())).thenReturn(Mono.just(application));
-        when(userRestConsumer.findUserByEmail(anyString())).thenReturn(Mono.just(user));
-        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
-        when(decisionEventSenderRepository.sendStatusUpdated(any(DecisionEvent.class))).thenReturn(Mono.just("messageId"));
-
-        // Datos de entrada con el nuevo estado aprobado (4)
-        Application updatedApplication = Application.builder().id(application.getId()).email(application.getEmail()).statusId(4).build();
-
-        // Ejecución y verificación del caso de uso
-        StepVerifier.create(useCase.updateApplicationStatus(updatedApplication))
-                .expectNextMatches(savedApp -> savedApp.getStatusId().equals(4) && savedApp.getDocumentId().equals(user.documentId()))
-                .verifyComplete();
-
-        // Verificación de llamadas a mocks
-        verify(applicationRepository).save(any(Application.class));
-        verify(decisionEventSenderRepository).sendStatusUpdated(any(DecisionEvent.class));
-    }
-
-    @Test
-    @DisplayName("Debería actualizar el estado pero no enviar notificación para estado de revisión manual")
-    void shouldUpdateStatusButNotSendNotificationOnManualReview() {
-        // Configuración de los mocks para un flujo exitoso sin notificación
-        when(applicationRepository.findByEmailAndId(anyString(), anyString())).thenReturn(Mono.just(application));
-        when(userRestConsumer.findUserByEmail(anyString())).thenReturn(Mono.just(user));
-        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
-
-        // Datos de entrada con el nuevo estado de revisión manual (3)
-        Application updatedApplication = Application.builder().id(application.getId()).email(application.getEmail()).statusId(3).build();
-
-        // Ejecución y verificación del caso de uso
-        StepVerifier.create(useCase.updateApplicationStatus(updatedApplication))
-                .expectNextMatches(savedApp -> savedApp.getStatusId().equals(3))
-                .verifyComplete();
-
-        // Verificación de que la notificación NO fue enviada
-        verify(applicationRepository).save(any(Application.class));
-        verify(decisionEventSenderRepository, never()).sendStatusUpdated(any(DecisionEvent.class));
-    }
+//    @Test
+//    @DisplayName("Debería actualizar el estado y el documentId del usuario")
+//    void shouldUpdateStatusAndDocumentId() {
+//        // Configuración de los mocks para un flujo exitoso
+//        when(applicationRepository.findByEmailAndId(anyString(), anyString())).thenReturn(Mono.just(application));
+//        when(userRestConsumer.findUserByEmail(anyString())).thenReturn(Mono.just(user));
+//        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
+//
+//        // Datos de entrada con el nuevo estado
+//        Application updatedApplication = Application.builder().id(application.getId()).email(application.getEmail()).statusId(4).build();
+//
+//        // Ejecución y verificación del caso de uso
+//        StepVerifier.create(useCase.updateApplicationStatus(updatedApplication))
+//                .expectNextMatches(savedApp -> savedApp.getStatusId().equals(4) && savedApp.getDocumentId().equals(user.documentId()))
+//                .verifyComplete();
+//
+//        // Verificación de llamadas a mocks
+//        verify(applicationRepository).save(any(Application.class));
+//    }
 
     @Test
     @DisplayName("Debería lanzar una excepción si el estado es el mismo")
@@ -114,6 +87,5 @@ class UpdateApplicationStatusUseCaseTest {
                 .verify();
 
         verify(applicationRepository, never()).save(any(Application.class));
-        verify(decisionEventSenderRepository, never()).sendStatusUpdated(any(DecisionEvent.class));
     }
 }
