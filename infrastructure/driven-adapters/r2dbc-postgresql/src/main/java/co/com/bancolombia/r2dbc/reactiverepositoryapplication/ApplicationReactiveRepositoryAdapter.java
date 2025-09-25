@@ -11,12 +11,14 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @Repository
 public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Application,
         ApplicationEntity,
-        String,
+        UUID,
         ApplicationReactiveRepository
         > implements ApplicationRepository {
 
@@ -50,8 +52,14 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
     }
 
     @Override
-    public Mono<Application> findByEmailAndId(String email, String id) {
+    public Mono<Application> findByEmailAndId(String email, UUID id) {
         return repository.findByEmailAndId(email, id)
+                .map(this::toEntity);
+    }
+
+    @Override
+    public Flux<Application> findByEmailAndStatusId(String email, Integer statusId) {
+        return repository.findByEmailAndStatusId(email, statusId)
                 .map(this::toEntity);
     }
 }
