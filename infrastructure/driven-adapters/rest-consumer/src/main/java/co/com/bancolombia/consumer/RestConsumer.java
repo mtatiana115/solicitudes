@@ -53,6 +53,27 @@ public class RestConsumer implements IUserRestConsumer {
     }
 
 
+//    @Override
+//    @CircuitBreaker(name = "findUserByEmail", fallbackMethod = "findUserFallback")
+//    public Mono<User> findUserByEmail(String email) {
+//        log.info("➡️ Buscando usuario en user-service por email={}", email);
+//        return client.get()
+//                .uri(PATH_FIND_USER_BY_EMAIL, email)
+//                .retrieve() // The WebClient filter automatically handles the token here
+//                .onStatus(HttpStatusCode::isError, response ->
+//                        response.createException()
+//                                .flatMap(ex -> Mono.error(new ExternalServiceCommunicationException(
+//                                        SERVICE_NAME, PATH_FIND_USER_BY_EMAIL,
+//                                        "Error al buscar usuario por email=" + email + " (status=" + response.statusCode().value() + ")", ex))))
+//                .bodyToMono(UserDTO.class)
+//                .doOnNext(dto -> log.info("✅ Usuario encontrado en user-service: {}", dto.getEmail()))
+//                .map(this::toUserDomain)
+//                .switchIfEmpty(Mono.defer(() -> {
+//                    log.warn("⚠️ Usuario no encontrado en user-service para email={}", email);
+//                    return Mono.empty();
+//                }));
+//    }
+
     @Override
     @CircuitBreaker(name = "findUserByEmail", fallbackMethod = "findUserFallback")
     public Mono<User> findUserByEmail(String email) {
@@ -61,17 +82,20 @@ public class RestConsumer implements IUserRestConsumer {
                 .uri(PATH_FIND_USER_BY_EMAIL, email)
                 .retrieve() // The WebClient filter automatically handles the token here
                 .onStatus(HttpStatusCode::isError, response ->
-                        response.createException()
-                                .flatMap(ex -> Mono.error(new ExternalServiceCommunicationException(
-                                        SERVICE_NAME, PATH_FIND_USER_BY_EMAIL,
-                                        "Error al buscar usuario por email=" + email + " (status=" + response.statusCode().value() + ")", ex))))
-                .bodyToMono(UserDTO.class)
-                .doOnNext(dto -> log.info("✅ Usuario encontrado en user-service: {}", dto.getEmail()))
-                .map(this::toUserDomain)
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("⚠️ Usuario no encontrado en user-service para email={}", email);
-                    return Mono.empty();
-                }));
+                        response.bodyToMono(String.class)
+                                .defaultIfEmpty("")
+                                .flatMap(body -> {
+                                    log.error("[USER-CLIENT] HTTP {} email={} body={}",
+                                            response.statusCode().value(), email, body);
+                                    return Mono.error(new IllegalStateException(
+                                            "user-service error " + response.statusCode().value()));
+                                })
+                                )
+                .bodyToMono(User.class)
+                .doOnSubscribe(s ->log.info("[USER-CLIENT] GET summary email={}", email))
+                .doOnNext(u -> log.info("[USER-CLIENT] OK email={} name={} baseSalary={}",
+                        email, u.name(), u.baseSalary()))
+                .doOnError(e -> log.error("[USER-CLIENT] FAIL email={} err={}", email, e.getMessage(), e));
     }
 
 

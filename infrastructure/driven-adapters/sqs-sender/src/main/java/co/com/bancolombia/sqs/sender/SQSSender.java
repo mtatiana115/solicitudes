@@ -14,21 +14,18 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 @Log4j2
 @RequiredArgsConstructor
 public class SQSSender {
-    private final SQSSenderProperties properties;
     private final SqsAsyncClient client;
-    private  final ObjectMapper objectMapper;
 
-    public Mono<String> send(String message) {
-
-        return Mono.fromCallable(() -> buildRequest(message))
+    public Mono<String> send(String queueUrl, String message) {
+        return Mono.fromCallable(() -> buildRequest(queueUrl, message))
                 .flatMap(request -> Mono.fromFuture(client.sendMessage(request)))
                 .doOnNext(response -> log.debug("Message sent {}", response.messageId()))
                 .map(SendMessageResponse::messageId);
     }
 
-    private SendMessageRequest buildRequest(String message) {
+    private SendMessageRequest buildRequest(String queueUrl, String message) {
         return SendMessageRequest.builder()
-                .queueUrl(properties.queueUrl())
+                .queueUrl(queueUrl)
                 .messageBody(message)
                 .build();
     }

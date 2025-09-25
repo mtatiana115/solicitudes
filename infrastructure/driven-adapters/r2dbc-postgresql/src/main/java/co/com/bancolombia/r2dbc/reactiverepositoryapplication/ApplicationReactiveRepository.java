@@ -8,8 +8,10 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
 
-public interface ApplicationReactiveRepository extends ReactiveCrudRepository<ApplicationEntity, String>, ReactiveQueryByExampleExecutor<ApplicationEntity> {
+
+public interface ApplicationReactiveRepository extends ReactiveCrudRepository<ApplicationEntity, UUID>, ReactiveQueryByExampleExecutor<ApplicationEntity> {
 
     @Query("""
         SELECT application_id, amount, term, email, loan_type_id, status_id, document_id
@@ -37,6 +39,8 @@ public interface ApplicationReactiveRepository extends ReactiveCrudRepository<Ap
             @Param("statusId") Integer statusId
     );
 
-    Mono<ApplicationEntity> findByEmailAndId(String email, String id);
+    Mono<ApplicationEntity> findByEmailAndId(String email, UUID id);
+
+    Flux<ApplicationEntity> findByEmailAndStatusId(String email, Integer statusId);
 }
 

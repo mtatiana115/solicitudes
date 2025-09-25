@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,11 +16,13 @@ import java.math.BigDecimal;
 @Builder(toBuilder = true)
 public class Application {
 
-    private String id;
+    private UUID id;
     private BigDecimal amount;
     private Integer term;
     private String email;
     private Integer loanTypeId;
     private Integer statusId;
     private String documentId;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

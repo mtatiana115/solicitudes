@@ -1,7 +1,6 @@
 package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.application.auxmodels.DecisionEvent;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.application.gateways.IUserRestConsumer;
 import co.com.bancolombia.model.auth.User;
@@ -9,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +41,7 @@ class UpdateApplicationStatusUseCaseTest {
     @BeforeEach
     void setUp() {
         application = Application.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.fromString(UUID.randomUUID().toString()))
                 .amount(new BigDecimal("5000000"))
                 .term(24)
                 .email("test@example.com")
@@ -76,7 +76,7 @@ class UpdateApplicationStatusUseCaseTest {
     @DisplayName("Debería lanzar una excepción si el estado es el mismo")
     void shouldThrowExceptionIfStatusIsTheSame() {
 
-        when(applicationRepository.findByEmailAndId(anyString(), anyString())).thenReturn(Mono.just(application));
+        when(applicationRepository.findByEmailAndId(anyString(), UUID.fromString(ArgumentMatchers.anyString()))).thenReturn(Mono.just(application));
         when(userRestConsumer.findUserByEmail(anyString())).thenReturn(Mono.just(user));
 
         Application sameStatusApplication = Application.builder().id(application.getId()).email(application.getEmail()).statusId(1).build();

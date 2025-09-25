@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -79,7 +80,7 @@ public class Handler {
                 .flatMap(dto -> requestValidator.validate(dto, "Solicitud inválida"))
                 .map(dto -> {
                     var model = loanApplicationDTOMapper.toModel(dto);
-                    model.setId(id);
+                    model.setId(UUID.fromString(id));
                     return model;
                 })
                 .cast(Application.class)

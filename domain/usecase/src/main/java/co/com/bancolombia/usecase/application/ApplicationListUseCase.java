@@ -61,7 +61,7 @@ public class ApplicationListUseCase {
                                         );
 
                                         return new ApplicationList(
-                                                app.getId(),
+                                                app.getId().toString(),
                                                 app.getAmount(),
                                                 app.getTerm(),
                                                 app.getEmail(),
